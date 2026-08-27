@@ -1,4 +1,5 @@
 import * as opentype from 'opentype.js';
+import {DEFAULT_PIXEL_HEIGHT, MIN_PIXEL_HEIGHT} from '../const';
 
 export type BDFGlyph = {
     code: number;
@@ -40,6 +41,22 @@ export async function loadFont(file: File): Promise<opentype.Font> {
     return opentype.parse(arrayBuffer);
 }
 
+/**
+ * Coerces a caller-supplied pixel height into a usable integer.
+ *
+ * Callers routinely pass values straight from a number input, where clearing the
+ * field yields `''` and Vue's `v-model.number` leaves it as a string. Anything
+ * that is not a finite number becomes the default, and valid numbers are floored
+ * to at least one pixel so the rasterizer never builds a zero-sized canvas.
+ */
+export function normalizePixelHeight(pixelHeight: unknown): number {
+    const parsed = typeof pixelHeight === 'number' ? pixelHeight : parseFloat(pixelHeight as string);
+    if (!Number.isFinite(parsed)) {
+        return DEFAULT_PIXEL_HEIGHT;
+    }
+    return Math.max(MIN_PIXEL_HEIGHT, Math.floor(parsed));
+}
+
 export function extractAndRasterizeGlyphs(
     font: opentype.Font,
     pixelHeight: number,
@@ -51,7 +68,9 @@ export function extractAndRasterizeGlyphs(
     const scale = pixelHeight / font.unitsPerEm;
     const fontAscender = font.ascender;
     const fontDescender = font.descender;
-    const renderHeight = Math.ceil((fontAscender - fontDescender) * scale);
+    // A font whose ascender does not exceed its descender would otherwise produce a
+    // zero-height canvas, and getImageData throws IndexSizeError on a zero source.
+    const renderHeight = Math.max(1, Math.ceil((fontAscender - fontDescender) * scale));
     const baselineY = Math.round(fontAscender * scale);
 
     for (let code = start; code <= end; code++) {
