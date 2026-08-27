@@ -18,8 +18,11 @@
         "README.md"
     ],
     "scripts": {
+        "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
+        "prebuild": "npm run clean",
         "build": "rollup -c",
         "watch": "rollup -c -w",
+        "prepublishOnly": "npm run build",
         "test": "vitest run",
         "test:watch": "vitest"
     },
