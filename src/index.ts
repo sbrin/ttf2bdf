@@ -1,5 +1,6 @@
 import {loadFont, extractAndRasterizeGlyphs, normalizePixelHeight, FontPack, FontMeta} from './core/glyphRasterizer';
 import {createBDFFont} from './adapters/createBDFFont';
+import {gfxToBdf} from './adapters/gfxToBdf';
 import {DEFAULT_PIXEL_HEIGHT, DEFAULT_RESOLUTION, ASCII_START, ASCII_END} from './const';
 
 /**
@@ -58,5 +59,5 @@ export async function truetype2bdf(
     }
 }
 
-export {createBDFFont};
+export {createBDFFont, gfxToBdf};
 export type {FontPack, FontMeta};

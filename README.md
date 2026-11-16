@@ -11,6 +11,7 @@ Works with [opentype.js](https://github.com/opentypejs/opentype.js)
 - **Font Conversion**: Rasterizes vector glyphs into monochrome bitmaps suitable for BDF consumers.
 - **Customization**: Allows specification of desired pixel height for font scaling.
 - **Output Formats**: Generates output as a `FontPack`, BDF file (`.bdf`), or as a string.
+- **Adafruit GFX Conversion**: Converts an Adafruit_GFX font header (`.h`) to a BDF font (`gfxToBdf`).
 - **Browser Compatibility**: Designed for use as an ES module in browsers.
 
 ## Installation
@@ -56,6 +57,37 @@ Promise that resolves to one of:
 - `FontPack`: Internal font representation (when format is undefined)
 - `string`: BDF file content (when format is 'string')
 - `File`: BDF file object (when format is 'file')
+
+### `gfxToBdf(gfxText, name?)`
+
+Converts an Adafruit_GFX font header (the `.h` file that `fontconvert` makes) to a BDF font.
+
+```js
+import {gfxToBdf} from 'truetype2bdf';
+
+const {name, content} = gfxToBdf(headerText);
+// content: the text of a BDF file, for example for U8g2 bdfconv.
+```
+
+#### Parameters
+
+- `gfxText` (string): The text of the header file.
+- `name` (string, optional): The font name in the BDF file. The default is the C name of the `GFXfont`.
+
+#### Returns
+
+An object with these fields:
+
+- `name` (string): The font name.
+- `content` (string): The text of the BDF file.
+
+#### Rules
+
+- Each glyph keeps its position. The BBX x offset is the GFX `xOffset`. The BBX y offset is the bottom of the glyph
+  box: `-(yOffset + height)`.
+- An entry without pixels and without an advance is a code without a glyph. The BDF file does not include it.
+- `FONT_ASCENT` and `FONT_DESCENT` are the highest pixel and the lowest pixel of the glyphs.
+- The function throws an error if the text does not have a bitmap array, a `GFXglyph` table and a `GFXfont`.
 
 ## Supported Font Formats
 

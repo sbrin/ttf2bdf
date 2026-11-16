@@ -24,6 +24,10 @@ export type FontMeta = {
     ascent: number;
     descent: number;
     unitsPerEm: number;
+    /** The format the font came from, named in the BDF comment. Defaults to TrueType. */
+    sourceFormat?: string;
+    /** The foundry in the XLFD name and the FOUNDRY property. Defaults to FreeType. */
+    foundry?: string;
 };
 
 export type FontPack = {
