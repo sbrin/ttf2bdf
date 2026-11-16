@@ -1,6 +1,7 @@
 import {FontPack} from '../core/glyphRasterizer';
 
 function makeXLFDName(
+    foundry: string,
     name: string,
     subfamily: string,
     pointSize: number,
@@ -13,7 +14,7 @@ function makeXLFDName(
     const safeName = name.replace(/-/g, ' ');
     const pixelSize = pointSize;
     const pointSizeDeci = pointSize * 10;
-    return `-FreeType-${safeName}-${weight}-${slant}-Normal--${pixelSize}-${pointSizeDeci}-${resolution}-${resolution}-P-${avgWidth}-ISO10646-1`;
+    return `-${foundry}-${safeName}-${weight}-${slant}-Normal--${pixelSize}-${pointSizeDeci}-${resolution}-${resolution}-P-${avgWidth}-ISO10646-1`;
 }
 
 export function createBDFFont(fontPack: FontPack): {name: string; content: string} {
@@ -40,12 +41,16 @@ export function createBDFFont(fontPack: FontPack): {name: string; content: strin
         if (-g.yOffset > maxDS) maxDS = -g.yOffset;
     }
 
-    const xlfd = makeXLFDName(meta.name, meta.subfamily, meta.pointSize, meta.resolution, avgWidth);
+    const foundry = meta.foundry ?? 'FreeType';
+    const sourceFormat = meta.sourceFormat ?? 'TrueType';
+    // The _OTF_ properties name the OpenType file, so only TrueType sources have them.
+    const fromTrueType = sourceFormat === 'TrueType';
+    const xlfd = makeXLFDName(foundry, meta.name, meta.subfamily, meta.pointSize, meta.resolution, avgWidth);
     const lines: string[] = [];
 
     lines.push('STARTFONT 2.1');
     lines.push('COMMENT');
-    lines.push(`COMMENT Converted from TrueType font "${meta.name}" by truetype2bdf.`);
+    lines.push(`COMMENT Converted from ${sourceFormat} font "${meta.name}" by truetype2bdf.`);
     lines.push('COMMENT');
     lines.push(`FONT ${xlfd}`);
     lines.push(`SIZE ${meta.pointSize} ${meta.resolution} ${meta.resolution}`);
@@ -55,8 +60,8 @@ export function createBDFFont(fontPack: FontPack): {name: string; content: strin
     const weight = sub.includes('bold') ? 'Bold' : 'Medium';
     const slant = sub.includes('italic') || sub.includes('oblique') ? 'I' : 'R';
 
-    lines.push('STARTPROPERTIES 19');
-    lines.push('FOUNDRY "FreeType"');
+    lines.push(`STARTPROPERTIES ${fromTrueType ? 19 : 17}`);
+    lines.push(`FOUNDRY "${foundry}"`);
     lines.push(`FAMILY_NAME "${meta.name}"`);
     lines.push(`WEIGHT_NAME "${weight}"`);
     lines.push(`SLANT "${slant}"`);
@@ -73,8 +78,10 @@ export function createBDFFont(fontPack: FontPack): {name: string; content: strin
     lines.push(`FONT_ASCENT ${meta.ascent}`);
     lines.push(`FONT_DESCENT ${meta.descent}`);
     lines.push(`COPYRIGHT "${meta.copyright}"`);
-    lines.push(`_OTF_FONTFILE "${meta.name}"`);
-    lines.push(`_OTF_PSNAME "${meta.postscriptName}"`);
+    if (fromTrueType) {
+        lines.push(`_OTF_FONTFILE "${meta.name}"`);
+        lines.push(`_OTF_PSNAME "${meta.postscriptName}"`);
+    }
     lines.push('ENDPROPERTIES');
 
     lines.push(`CHARS ${glyphList.length}`);
