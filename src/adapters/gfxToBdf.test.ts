@@ -32,7 +32,7 @@ describe('gfxToBdf', () => {
         const {content} = gfxToBdf(HEADER);
         expect(glyphLines(content, 0x41)).toEqual([
             'ENCODING 65',
-            'SWIDTH 1500 0',
+            'SWIDTH 500 0',
             'DWIDTH 6 0',
             // The box top is 2 pixels above the baseline, so its bottom is 2 pixels below it.
             'BBX 3 4 1 -2',
@@ -49,7 +49,7 @@ describe('gfxToBdf', () => {
         expect(glyphLines(content, 0x42)).toEqual([]);
         expect(glyphLines(content, 0x43)).toEqual([
             'ENCODING 67',
-            'SWIDTH 1000 0',
+            'SWIDTH 333 0',
             'DWIDTH 4 0',
             'BBX 0 0 0 0',
             'BITMAP',
@@ -57,18 +57,24 @@ describe('gfxToBdf', () => {
         expect(content).toContain('CHARS 2');
     });
 
-    it('measures the ascent and the descent from the glyphs', () => {
+    it('keeps the line height of the GFX font: yAdvance is ascent plus descent', () => {
         const {content} = gfxToBdf(HEADER);
+        expect(content).toContain('FONT_ASCENT 10');
+        expect(content).toContain('FONT_DESCENT 2');
+        expect(content).toContain('SIZE 12 72 72');
+    });
+
+    it('keeps every glyph inside the line when yAdvance is smaller than the glyphs', () => {
+        const {content} = gfxToBdf(HEADER.replace('0x41, 0x43, 12', '0x41, 0x43, 3'));
         expect(content).toContain('FONT_ASCENT 2');
         expect(content).toContain('FONT_DESCENT 2');
-        expect(content).toContain('SIZE 4 72 72');
     });
 
     it('names the font after the GFXfont or the given name', () => {
         expect(gfxToBdf(HEADER).name).toBe('Tiny');
         const {name, content} = gfxToBdf(HEADER, 'clock');
         expect(name).toBe('clock');
-        expect(content).toContain('FONT -Misc-clock-Medium-R-Normal--4-40-72-72-P-');
+        expect(content).toContain('FONT -Misc-clock-Medium-R-Normal--12-120-72-72-P-');
         expect(content).toContain('COMMENT Converted from Adafruit GFX font "clock" by truetype2bdf.');
         expect(content).not.toContain('_OTF_');
         expect(content).toContain('STARTPROPERTIES 17');
