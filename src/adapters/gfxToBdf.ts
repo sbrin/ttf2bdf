@@ -54,6 +54,7 @@ export function gfxToBdf(gfxText: string, name?: string): {name: string; content
     const fontFields = fontMatch[2].split(',');
     const first = toNumber(fontFields[2] ?? '0');
     const last = toNumber(fontFields[3] ?? String(first + entries.length - 1));
+    const yAdvance = toNumber(fontFields[4] ?? '0');
 
     const glyphs = new Map<number, BDFGlyph>();
     entries
@@ -81,8 +82,10 @@ export function gfxToBdf(gfxText: string, name?: string): {name: string; content
     }
 
     const inked = [...glyphs.values()].filter((glyph) => glyph.height > 0);
-    const ascent = Math.max(0, ...inked.map((glyph) => glyph.yOffset + glyph.height));
+    const inkAscent = Math.max(0, ...inked.map((glyph) => glyph.yOffset + glyph.height));
     const descent = Math.max(0, ...inked.map((glyph) => -glyph.yOffset));
+    // The line height of the font is its yAdvance; the space above the highest glyph is part of it.
+    const ascent = Math.max(inkAscent, yAdvance - descent);
     const pixelSize = Math.max(1, ascent + descent);
     for (const glyph of glyphs.values()) glyph.sWidth = Math.round((glyph.xAdvance * 1000) / pixelSize);
 

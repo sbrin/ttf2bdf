@@ -86,7 +86,8 @@ An object with these fields:
 - Each glyph keeps its position. The BBX x offset is the GFX `xOffset`. The BBX y offset is the bottom of the glyph
   box: `-(yOffset + height)`.
 - An entry without pixels and without an advance is a code without a glyph. The BDF file does not include it.
-- `FONT_ASCENT` and `FONT_DESCENT` are the highest pixel and the lowest pixel of the glyphs.
+- `FONT_DESCENT` is the lowest pixel of the glyphs. `FONT_ASCENT` + `FONT_DESCENT` is the `yAdvance` of the
+  GFX font (its line height). If a glyph is higher than that, `FONT_ASCENT` is the highest pixel of the glyphs.
 - The function throws an error if the text does not have a bitmap array, a `GFXglyph` table and a `GFXfont`.
 
 ## Supported Font Formats
